@@ -4,6 +4,7 @@ import asyncio
 import csv
 import io
 import json
+import logging
 import math
 import os
 import statistics
@@ -20,6 +21,8 @@ from fastapi.staticfiles import StaticFiles
 
 
 ROOT = Path(__file__).resolve().parent
+logger = logging.getLogger(__name__)
+
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 CACHE_SECONDS = 15 * 60
 LOOKBACK_DAYS = 30
@@ -294,9 +297,17 @@ async def fetch_weather(request: Request, city: dict[str, object], refresh: bool
         cache[city_id] = {"body": body, "cached_at": now}
         return body
     except (httpx.HTTPError, ValueError, KeyError) as error:
+        logger.exception("Open-Meteo request failed for city %s", city_id)
         if cached:
-            return {**cached["body"], "source": "cached", "message": "Open-Meteo could not be reached; showing the last successful response."}
-        raise HTTPException(status_code=502, detail="Live weather is unavailable and no cached response exists.") from error
+            return {
+                **cached["body"],
+                "source": "cached",
+                "message": "Open-Meteo could not be reached; showing the last successful response.",
+            }
+        raise HTTPException(
+            status_code=502,
+            detail="Live weather is unavailable and no cached response exists.",
+        ) from error
 
 
 @app.get("/api/weather/coordinates")
