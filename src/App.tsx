@@ -169,7 +169,7 @@ const fallbackCities: City[] = [
     heatThresholdC: 35.6,
   },
 ];
-const API = "/api";
+const API = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
 // West, south, east, north: a country-level view with enough padding for all
 // seven supported locations, without starting on a broad Asia-wide viewport.
 const INDIA_BOUNDS: [[number, number], [number, number]] = [
